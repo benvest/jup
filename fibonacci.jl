@@ -3,6 +3,7 @@
 # F_(n+2) = F_(n+1) + F_n
 # F_(n+1) = F_(n+1)
 #
+# The idea for this one came from a linear algebra lecture (22) by Strang.
 function fibonacci(n)
   u0 = [ 0 ; 1 ]
   A = [ 1 1 ; 1 0 ]
@@ -38,4 +39,30 @@ function recursive_fibonacci(n)
   n == 1 && return 0
   n == 2 && return 1
   return recursive_fibonacci(n-1) + recursive_fibonacci(n-2)
+end
+
+#  Binet formula
+function binetfib(n)
+  return ((1+sqrt(big(5)))^n-(1-sqrt(big(5)))^n)/(sqrt(big(5))*big(2)^n)
+end
+
+# This one is the winner by a nice margin in allocations and time.
+#
+# I stole this from somewhere, need to find where sometime (stack overflow?)
+const fibmem = Dict{Int,BigInt}()
+function memfib(n)
+  get!(fibmem, n) do
+    if n <= 0
+      return BigInt(0)
+    elseif n == 1
+      return BigInt(1)
+    else
+      m = n >> 1
+      if iseven(n)
+        return memfib(m)*(2*memfib(m-1) + memfib(m))
+      else
+        return memfib(m+1)^2 + memfib(m)^2
+      end
+    end
+  end
 end
