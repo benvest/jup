@@ -1,3 +1,6 @@
+using Cassette
+Cassette.@context MemoizeCtx
+
 # The fibonacci sequence 0, 1, 1, 2, 3, 5, 8, 13,...
 #
 # F_(n+2) = F_(n+1) + F_n
@@ -14,7 +17,15 @@ function fibonacci(n)
   D = [ lambda_1 0 ; 0 lambda_2 ]
   # u0 = Sc => c = S^-1 u0
   c = inv(S)*u0
-  return BigInt(round(last(S*D^n*c)))
+  return BigInt(round(first(S*D^n*c)))
+end
+
+function Cassette.overdub(ctx::MemoizeCtx, ::typeof(fibonacci), x)
+  get(ctx.metadata, x) do
+    result = recurse(ctx, fibonacci, x)
+    ctx.metadata[x] = result
+    return result
+  end
 end
 
 function recursive_fibonacci(n)
@@ -24,13 +35,24 @@ function recursive_fibonacci(n)
 end
 
 #  Binet formula
+#
+# This is the same as `fibonacci` except the operations are extracted out of matrix form for perf
 function binetfib(n)
   return ((1+sqrt(big(5)))^n-(1-sqrt(big(5)))^n)/(sqrt(big(5))*big(2)^n)
 end
 
+function Cassette.overdub(ctx::MemoizeCtx, ::typeof(binetfib), x)
+  get(ctx.metadata, x) do
+    result = recurse(ctx, binetfib, x)
+    ctx.metadata[x] = result
+    return result
+  end
+end
+
 # This one is the winner by a nice margin in allocations and time.
-#
+# Although when Cassette comes to play the binetfib seems to be a bit faster.
 # I stole this from somewhere, need to find where sometime (stack overflow?)
+# It is using a shortcut that has to do with powers of two.
 const fibmem = Dict{Int,BigInt}()
 function memfib(n)
   get!(fibmem, n) do
