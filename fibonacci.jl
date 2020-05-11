@@ -50,7 +50,10 @@ function Cassette.overdub(ctx::MemoizeCtx, ::typeof(binetfib), x)
 end
 
 # This one is the winner by a nice margin in allocations and time.
-# Although when Cassette comes to play the binetfib seems to be a bit faster.
+#
+# Although when Cassette comes to play the binetfib seems to be a bit faster. That follows since cassette is
+# probably better optimized somehow?
+#
 # I stole this from somewhere, need to find where sometime (stack overflow?)
 # It is using a shortcut that has to do with powers of two.
 const fibmem = Dict{Int,BigInt}()
